@@ -1,131 +1,134 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#ff6b6b">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="TaskAI">
-<link rel="manifest" href="manifest.json">
-<title>TaskAI</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:#0f0e17;font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;color:#fffffe;overflow:hidden}
-button,input,textarea,select{font-family:inherit}
-#app{height:100dvh;display:flex;flex-direction:column}.screen{display:none;flex:1;flex-direction:column;overflow:hidden}.screen.active{display:flex}
-.hdr{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid #2e2b45;flex-shrink:0;background:#1a1828}.logo{font-size:20px;font-weight:900;background:linear-gradient(90deg,#ff6b6b,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.btn-add{background:linear-gradient(135deg,#ff6b6b,#a78bfa);border:none;border-radius:22px;padding:8px 18px;color:#fff;font-weight:800;font-size:14px;cursor:pointer}
-.tools{padding:12px 16px;border-bottom:1px solid #2e2b45;background:#151321;display:flex;gap:8px;flex-wrap:wrap}.search{flex:1;min-width:160px;background:#221f35;border:1px solid #2e2b45;border-radius:12px;padding:10px 12px;color:#fffffe;font-size:14px;outline:none}.filter{background:#221f35;border:1px solid #2e2b45;border-radius:12px;padding:10px 12px;color:#fffffe;font-size:14px;outline:none}.list-body{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch}.list-label{color:#a7a9be;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px}.task-card{background:#1a1828;border:1.5px solid #2e2b45;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer}.task-card:active{background:#221f35}.task-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.task-title{color:#fffffe;font-weight:700;font-size:15px;flex:1}.tags{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}.tag{border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}.task-desc{color:#a7a9be;font-size:13px;margin-top:5px;line-height:1.5}.task-meta{color:#a7a9be;font-size:11px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}.card-actions{display:flex;gap:6px;flex-shrink:0}.mini-btn{border:none;color:white;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer}.gpt-mini{background:linear-gradient(135deg,#ff6b6b,#a78bfa)}.del-mini{background:#3a2330;color:#ffb4c1;border:1px solid #7a3048}.empty{text-align:center;padding:60px 0;color:#a7a9be}.empty-icon{font-size:44px;margin-bottom:12px}
-.chat-hdr{height:56px;display:flex;align-items:center;gap:10px;padding:0 16px;border-bottom:1px solid #2e2b45;flex-shrink:0;background:#1a1828}.back-btn{background:none;border:none;color:#a7a9be;font-size:28px;cursor:pointer;padding:0 8px 0 0;line-height:1}.chat-task-info{flex:1;min-width:0}.chat-task-title{color:#fffffe;font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chat-task-tags{display:flex;gap:5px;margin-top:3px}.messages{flex:1;overflow-y:auto;padding:16px 14px 8px;-webkit-overflow-scrolling:touch}.ai-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ff6b6b,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:12px;margin-right:8px;flex-shrink:0;margin-top:2px}.bubble-wrap{display:flex;margin-bottom:12px}.bubble{max-width:80%;padding:10px 14px;font-size:14px;line-height:1.7;white-space:pre-wrap;border-radius:18px}.bubble.ai{background:#221f35;border:1px solid #2e2b45;border-radius:18px 18px 18px 4px}.gpt-panel{padding:18px;background:#1a1828;border:1.5px solid #2e2b45;border-radius:16px;margin-bottom:14px}.gpt-title{font-size:16px;font-weight:800;margin-bottom:8px;color:#fffffe}.gpt-desc{font-size:13px;line-height:1.7;color:#a7a9be;margin-bottom:14px}.gpt-btn{width:100%;border:none;border-radius:14px;background:linear-gradient(135deg,#ff6b6b,#a78bfa);color:#fff;padding:14px 16px;font-size:15px;font-weight:800;cursor:pointer}.copy-btn,.delete-big{width:100%;border:1px solid #2e2b45;border-radius:14px;background:#221f35;color:#fffffe;padding:12px 16px;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px}.delete-big{background:#3a2330;color:#ffb4c1;border-color:#7a3048}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;padding:20px}.modal-overlay.open{display:flex}.modal{background:#0f0e17;border:1px solid #2e2b45;border-radius:20px;padding:24px;width:100%;max-width:440px}.modal h2{color:#fffffe;margin:0 0 18px;font-size:18px;font-weight:800}.field{margin-bottom:12px}.field label{color:#a7a9be;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px}.field input,.field textarea,.field select{width:100%;background:#1a1828;border:1px solid #2e2b45;border-radius:10px;padding:10px 14px;color:#fffffe;font-size:14px;outline:none}.field textarea{resize:vertical;min-height:68px}.field-row{display:flex;gap:10px}.field-row .field{flex:1}.modal-btns{display:flex;gap:10px;margin-top:18px}.btn-cancel{flex:1;padding:12px;border-radius:10px;border:1px solid #2e2b45;background:transparent;color:#a7a9be;cursor:pointer;font-size:14px}.btn-submit{flex:2;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#ff6b6b,#a78bfa);color:#fff;cursor:pointer;font-size:14px;font-weight:700}.hint{font-size:11px;color:#a7a9be;margin-top:4px;line-height:1.5}
-</style>
-</head>
-<body>
-<div id="app">
-  <div class="screen active" id="screen-list">
-    <div class="hdr"><span class="logo">TaskAI</span><button class="btn-add" onclick="openModal()">＋ 追加</button></div>
-    <div class="tools">
-      <input class="search" id="search-input" placeholder="タスクを検索..." oninput="renderList()">
-      <select class="filter" id="cat-filter" onchange="renderList()"></select>
-    </div>
-    <div class="list-body"><div class="list-label" id="list-count">タスク一覧 (0)</div><div id="task-list"></div></div>
-  </div>
-  <div class="screen" id="screen-chat">
-    <div class="chat-hdr"><button class="back-btn" onclick="showList()">‹</button><div class="chat-task-info"><div class="chat-task-title" id="chat-title"></div><div class="chat-task-tags" id="chat-tags"></div></div></div>
-    <div class="messages" id="messages"></div>
-  </div>
-</div>
-<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
-  <div class="modal">
-    <h2>＋ タスクを追加</h2>
-    <div class="field"><label>タイトル</label><input id="f-title" placeholder="タスク名を入力..."></div>
-    <div class="field"><label>詳細（任意）</label><textarea id="f-desc" placeholder="困っていること、状況など..."></textarea></div>
-    <div class="field-row">
-      <div class="field"><label>優先度</label><select id="f-pri"><option value="high">高</option><option value="mid" selected>中</option><option value="low">低</option></select></div>
-      <div class="field"><label>カテゴリ</label><select id="f-cat"></select></div>
-    </div>
-    <div class="field"><label>新しいカテゴリを追加</label><input id="f-new-cat" placeholder="例：独立準備、司法書士、生活改善"><div class="hint">入力すると、そのカテゴリでタスクを作成します。</div></div>
-    <div class="modal-btns"><button class="btn-cancel" onclick="closeModal()">キャンセル</button><button class="btn-submit" onclick="submitTask()">追加する</button></div>
-  </div>
-</div>
-<script>
-const STORAGE_KEY='taskai-data-v3';
-const PRI_L={high:'高',mid:'中',low:'低'};
-const PRI_C={high:'#ff6b6b',mid:'#ffd166',low:'#06d6a0'};
-const DEFAULT_COLORS=['#ff6b6b','#ffd166','#06d6a0','#a78bfa','#64b5f6','#f78fb3','#cddc39','#ffb74d'];
-let categories=['仕事','個人','学習','その他'];
-let tasks=[
-  {id:1,title:'プレゼン資料が完成しない',description:'明日の会議に間に合わせないといけないが、何から手をつければいいか...',priority:'high',category:'仕事'},
-  {id:2,title:'英語の勉強が続かない',description:'毎日やろうと決めても3日坊主になってしまう',priority:'mid',category:'学習'}
-];
-let currentId=null;
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0d0f14">
+    <meta name="description" content="悩みを行動に変えるTaskAI">
+    <title>TaskAI</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">TaskAI</p>
+          <h1>悩みを行動に変える</h1>
+        </div>
+        <button class="icon-button" id="installButton" type="button" hidden aria-label="ホーム画面に追加">
+          <span aria-hidden="true">＋</span>
+        </button>
+      </header>
 
-function loadData(){
-  try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY));if(saved){tasks=saved.tasks||tasks;categories=saved.categories||categories;}}
-  catch(e){}
-  syncCategoriesFromTasks();
-}
-function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify({tasks,categories}));}
-function syncCategoriesFromTasks(){tasks.forEach(t=>{if(t.category&&!categories.includes(t.category))categories.push(t.category);});}
-function catColor(cat){const i=Math.abs([...cat].reduce((a,c)=>a+c.charCodeAt(0),0))%DEFAULT_COLORS.length;return DEFAULT_COLORS[i];}
-function tagHTML(label,color){return `<span class="tag" style="background:${color}22;color:${color};border:1px solid ${color}55">${esc(label)}</span>`;}
-function esc(s=''){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+      <main class="layout">
+        <section class="hero-panel" aria-label="進捗">
+          <div class="progress-ring" aria-hidden="true">
+            <span id="completionRate">0%</span>
+          </div>
+          <div class="hero-copy">
+            <h2>司法書士学習・独立準備・知識整理を、今日の一手に。</h2>
+            <p id="todaySummary">今日のタスクはありません。</p>
+          </div>
+        </section>
 
-function renderCategoryControls(){
-  const filter=document.getElementById('cat-filter');
-  const current=filter.value||'__all__';
-  filter.innerHTML='<option value="__all__">全カテゴリ</option>'+categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
-  filter.value=[...categories,'__all__'].includes(current)?current:'__all__';
-  const sel=document.getElementById('f-cat');
-  sel.innerHTML=categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
-}
-function getFilteredTasks(){
-  const q=document.getElementById('search-input').value.trim().toLowerCase();
-  const cat=document.getElementById('cat-filter').value;
-  return tasks.filter(t=>{
-    const hit=!q||(t.title+' '+(t.description||'')+' '+t.category).toLowerCase().includes(q);
-    const catHit=cat==='__all__'||t.category===cat;
-    return hit&&catHit;
-  });
-}
-function renderList(){
-  renderCategoryControls();
-  const filtered=getFilteredTasks();
-  const el=document.getElementById('task-list');
-  document.getElementById('list-count').textContent=`タスク一覧 (${filtered.length}/${tasks.length})`;
-  if(filtered.length===0){el.innerHTML=`<div class="empty"><div class="empty-icon">⌕</div><div style="font-size:15px;font-weight:600">該当タスクがありません</div><div style="font-size:13px;margin-top:4px">検索条件を変えるか、タスクを追加してください</div></div>`;return;}
-  el.innerHTML=filtered.map(t=>`
-    <div class="task-card" onclick="openChat(${t.id})">
-      <div class="task-top"><span class="task-title">${esc(t.title)}</span><div class="tags">${tagHTML(PRI_L[t.priority],PRI_C[t.priority])}${tagHTML(t.category,catColor(t.category))}</div></div>
-      ${t.description?`<div class="task-desc">${esc(t.description)}</div>`:''}
-      <div class="task-meta"><span>ChatGPTで相談できます</span><div class="card-actions"><button class="mini-btn gpt-mini" onclick="event.stopPropagation(); openGPT(${t.id})">質問</button><button class="mini-btn del-mini" onclick="event.stopPropagation(); deleteTask(${t.id})">削除</button></div></div>
-    </div>`).join('');
-}
-function openChat(id){
-  currentId=id;const t=tasks.find(x=>x.id===id);if(!t)return;
-  document.getElementById('chat-title').textContent=t.title;
-  document.getElementById('chat-tags').innerHTML=tagHTML(PRI_L[t.priority],PRI_C[t.priority])+tagHTML(t.category,catColor(t.category));
-  document.getElementById('screen-list').classList.remove('active');document.getElementById('screen-chat').classList.add('active');renderMessages();
-}
-function showList(){document.getElementById('screen-chat').classList.remove('active');document.getElementById('screen-list').classList.add('active');renderList();}
-function makePrompt(t){return `次のタスクについて相談したいです。\n\nタイトル：${t.title}\n詳細：${t.description||'なし'}\n優先度：${PRI_L[t.priority]}\nカテゴリ：${t.category}\n\n具体的に、今すぐ何から始めればいいか教えてください。`;}
-function openGPT(id){const t=tasks.find(x=>x.id===id);if(!t)return;window.open('https://chatgpt.com/?q='+encodeURIComponent(makePrompt(t)),'_blank');}
-async function copyPrompt(id){const t=tasks.find(x=>x.id===id);if(!t)return;try{await navigator.clipboard.writeText(makePrompt(t));alert('質問文をコピーしました。');}catch(e){alert('コピーできませんでした。');}}
-function renderMessages(){const t=tasks.find(x=>x.id===currentId);if(!t)return;document.getElementById('messages').innerHTML=`<div class="gpt-panel"><div class="gpt-title">このタスクをChatGPTに相談</div><div class="gpt-desc">アプリ内AIは使わず、ChatGPTを開いて相談します。APIキー不要で使いやすい方式です。</div><button class="gpt-btn" onclick="openGPT(${t.id})">ChatGPTに質問する</button><button class="copy-btn" onclick="copyPrompt(${t.id})">質問文だけコピーする</button><button class="delete-big" onclick="deleteTask(${t.id})">このタスクを削除する</button></div><div class="bubble-wrap"><div class="ai-avatar">✦</div><div class="bubble ai">検索・カテゴリ追加・削除に対応しました。タスクはブラウザ内に保存されます。</div></div>`;}
-function deleteTask(id){const t=tasks.find(x=>x.id===id);if(!t)return;if(!confirm(`「${t.title}」を削除しますか？`))return;tasks=tasks.filter(x=>x.id!==id);saveData();if(currentId===id){currentId=null;showList();}else{renderList();}}
-function openModal(){document.getElementById('modal').classList.add('open');setTimeout(()=>document.getElementById('f-title').focus(),50);}
-function closeModal(){document.getElementById('modal').classList.remove('open');}
-function closeModalOutside(e){if(e.target===document.getElementById('modal'))closeModal();}
-function submitTask(){
-  const title=document.getElementById('f-title').value.trim();if(!title)return;
-  const newCat=document.getElementById('f-new-cat').value.trim();
-  const category=newCat||document.getElementById('f-cat').value||'その他';
-  if(!categories.includes(category))categories.push(category);
-  const t={id:Date.now(),title,description:document.getElementById('f-desc').value.trim(),priority:document.getElementById('f-pri').value,category};
-  tasks.unshift(t);saveData();
-  document.getElementById('f-title').value='';document.getElementById('f-desc').value='';document.getElementById('f-new-cat').value='';document.getElementById('f-pri').value='mid';
-  closeModal();openChat(t.id);
-}
-loadData();renderList();
-</script>
-</body>
+        <section class="quick-panel" aria-label="GPT壁打ち">
+          <div class="section-title">
+            <h2>GPT壁打ち</h2>
+            <button id="askChatGptButton" class="primary-button" type="button">ChatGPTに質問する</button>
+          </div>
+          <div class="template-grid" id="templateQuestions"></div>
+        </section>
+
+        <section class="form-panel" aria-label="タスク追加">
+          <form id="taskForm" autocomplete="off">
+            <label>
+              <span>タスク</span>
+              <input id="taskTitle" name="title" type="text" placeholder="例: 民法の択一30問を解く" required>
+            </label>
+            <div class="form-grid">
+              <label>
+                <span>カテゴリ</span>
+                <div class="inline-field">
+                  <select id="taskCategory" name="category"></select>
+                  <button id="addCategoryButton" class="ghost-button" type="button">追加</button>
+                </div>
+              </label>
+              <label>
+                <span>期限</span>
+                <input id="taskDueDate" name="dueDate" type="date">
+              </label>
+              <label>
+                <span>優先度</span>
+                <select id="taskPriority" name="priority">
+                  <option value="high">高</option>
+                  <option value="medium" selected>中</option>
+                  <option value="low">低</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              <span>メモ</span>
+              <textarea id="taskMemo" name="memo" rows="3" placeholder="気づき、論点、GPTに聞きたいこと"></textarea>
+            </label>
+            <button class="primary-button wide" type="submit">タスクを追加</button>
+          </form>
+        </section>
+
+        <section class="toolbar" aria-label="検索と絞り込み">
+          <label class="search-field">
+            <span>検索</span>
+            <input id="searchInput" type="search" placeholder="タスク・メモを検索">
+          </label>
+          <div class="toolbar-row">
+            <select id="categoryFilter" aria-label="カテゴリフィルタ"></select>
+            <select id="sortSelect" aria-label="並び替え">
+              <option value="created-desc">新しい順</option>
+              <option value="due-asc">期限が近い順</option>
+              <option value="priority-desc">優先度順</option>
+              <option value="title-asc">名前順</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="task-section" aria-label="今日のタスク">
+          <div class="section-title">
+            <h2>今日のタスク</h2>
+            <span id="todayCount" class="count-pill">0</span>
+          </div>
+          <div id="todayTasks" class="task-list"></div>
+        </section>
+
+        <section class="task-section" aria-label="すべてのタスク">
+          <div class="section-title">
+            <h2>すべて</h2>
+            <span id="taskCount" class="count-pill">0</span>
+          </div>
+          <div id="taskList" class="task-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="taskTemplate">
+      <article class="task-card">
+        <div class="task-main">
+          <button class="complete-button" type="button" aria-label="完了を切り替え"></button>
+          <div class="task-content">
+            <div class="task-heading">
+              <h3></h3>
+              <span class="priority-dot"></span>
+            </div>
+            <div class="task-meta"></div>
+            <textarea class="memo-input" rows="2" aria-label="メモ"></textarea>
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="template-button ask-button" type="button">GPT質問</button>
+          <button class="danger-button delete-button" type="button">削除</button>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="./app.js"></script>
+  </body>
 </html>
