@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#ff6b6b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="TaskAI" />
+  <link rel="manifest" href="manifest.json" />
+  <title>TaskAI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; background: #0f0e17; }
+    body { overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script>
+(function(){
+"use strict";
+const {useState,useRef,useEffect,createElement:h} = React;
+
+const C={bg:"#0f0e17",surface:"#1a1828",card:"#221f35",accent:"#ff6b6b",text:"#fffffe",muted:"#a7a9be",border:"#2e2b45"};
+const CAT_C={仕事:"#ff6b6b",個人:"#ffd166",学習:"#06d6a0",その他:"#a78bfa"};
+const PRI_L={high:"高",mid:"中",low:"低"};
+const PRI_C={high:"#ff6b6b",mid:"#ffd166",low:"#06d6a0"};
+
+function Tag({label,color}){
+  return h("span",{style:{background:color+"22",color,border:`1px solid ${color}55`,borderRadius:6,padding:"2px 9px",fontSize:11,fontWeight:700,letterSpacing:1,textTransform:"uppercase"}},label);
+}
+
+function TaskCard({task,onSelect}){
+  const hist=task.chatHistory||[];
+  return h("div",{onClick:()=>onSelect(task),style:{background:C.surface,border:`1.5px solid ${C.border}`,borderRadius:14,padding:"14px 16px",cursor:"pointer",marginBottom:10,display:"flex",flexDirection:"column",gap:6,WebkitTapHighlightColor:"transparent"}},
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}},
+      h("span",{style:{color:C.text,fontWeight:700,fontSize:15,flex:1}},task.title),
+      h("div",{style:{display:"flex",gap:5,flexShrink:0}},
+        h(Tag,{label:PRI_L[task.priority],color:PRI_C[task.priority]}),
+        h(Tag,{label:task.category,color:CAT_C[task.category]||"#a78bfa"})
+      )
+    ),
+    task.description&&h("p",{style:{color:C.muted,fontSize:13,margin:0,lineHeight:1.5}},task.description),
+    h("span",{style:{color:C.muted,fontSize:11}},hist.length>0?`💬 ${hist.length}件の相談`:"未相談")
+  );
+}
+
+function ChatBubble({role,content}){
+  const isUser=role==="user";
+  return h("div",{style:{display:"flex",justifyContent:isUser?"flex-end":"flex-start",marginBottom:12}},
+    !isUser&&h("div",{style:{width:28,height:28,borderRadius:"50%",background:`linear-gradient(135deg,${C.accent},#a78bfa)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,marginRight:8,flexShrink:0,marginTop:2}},"✦"),
+    h("div",{style:{maxWidth:"80%",background:isUser?`linear-gradient(135deg,${C.accent}cc,#a78bfa99)`:C.card,border:isUser?"none":`1px solid ${C.border}`,color:C.text,borderRadius:isUser?"18px 18px 4px 18px":"18px 18px 18px 4px",padding:"10px 14px",fontSize:14,lineHeight:1.7,whiteSpace:"pre-wrap"}},content)
+  );
+}
+
+function Modal({onAdd,onClose}){
+  const [form,setForm]=useState({title:"",description:"",priority:"mid",category:"仕事"});
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const inp={width:"100%",background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 14px",color:C.text,fontSize:14,outline:"none",fontFamily:"inherit"};
+  const lbl={color:C.muted,fontSize:12,fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:4,display:"block"};
+  return h("div",{onClick:onClose,style:{position:"fixed",inset:0,background:"#000000aa",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:20}},
+    h("div",{onClick:e=>e.stopPropagation(),style:{background:C.bg,border:`1px solid ${C.border}`,borderRadius:20,padding:24,width:"100%",maxWidth:440}},
+      h("h2",{style:{color:C.text,margin:"0 0 18px",fontSize:18,fontWeight:800}},"＋ タスクを追加"),
+      h("div",{style:{display:"flex",flexDirection:"column",gap:12}},
+        h("div",null,h("label",{style:lbl},"タイトル"),h("input",{style:inp,placeholder:"タスク名を入力...",value:form.title,onChange:e=>set("title",e.target.value)})),
+        h("div",null,h("label",{style:lbl},"詳細（任意）"),h("textarea",{style:{...inp,resize:"vertical",minHeight:68},placeholder:"困っていること、状況など...",value:form.description,onChange:e=>set("description",e.target.value)})),
+        h("div",{style:{display:"flex",gap:10}},
+          h("div",{style:{flex:1}},h("label",{style:lbl},"優先度"),h("select",{style:inp,value:form.priority,onChange:e=>set("priority",e.target.value)},h("option",{value:"high"},"高"),h("option",{value:"mid"},"中"),h("option",{value:"low"},"低"))),
+          h("div",{style:{flex:1}},h("label",{style:lbl},"カテゴリ"),h("select",{style:inp,value:form.category,onChange:e=>set("category",e.target.value)},...Object.keys(CAT_C).map(c=>h("option",{key:c},c))))
+        )
+      ),
+      h("div",{style:{display:"flex",gap:10,marginTop:20}},
+        h("button",{onClick:onClose,style:{flex:1,padding:12,borderRadius:10,border:`1px solid ${C.border}`,background:"transparent",color:C.muted,cursor:"pointer",fontSize:14}},"キャンセル"),
+        h("button",{onClick:()=>{if(form.title.trim()){onAdd(form);onClose();}},style:{flex:2,padding:12,borderRadius:10,border:"none",background:`linear-gradient(135deg,${C.accent},#a78bfa)`,color:"#fff",cursor:"pointer",fontSize:14,fontWeight:700}},"追加する")
+      )
+    )
+  );
+}
+
+function App(){
+  const [screen,setScreen]=useState("list");
+  const [tasks,setTasks]=useState([
+    {id:1,title:"プレゼン資料が完成しない",description:"明日の会議に間に合わせないといけないが、何から手をつければいいか...",priority:"high",category:"仕事",chatHistory:[]},
+    {id:2,title:"英語の勉強が続かない",description:"毎日やろうと決めても3日坊主になってしまう",priority:"mid",category:"学習",chatHistory:[]},
+  ]);
+  const [sel,setSel]=useState(null);
+  const [modal,setModal]=useState(false);
+  const [input,setInput]=useState("");
+  const [loading,setLoading]=useState(false);
+  const endRef=useRef(null);
+  const taRef=useRef(null);
+
+  useEffect(()=>{if(endRef.current)endRef.current.scrollIntoView({behavior:"smooth"});},[sel?.chatHistory,loading]);
+
+  const updateTask=(id,upd)=>{
+    setTasks(ts=>ts.map(t=>t.id===id?{...t,...upd}:t));
+    setSel(p=>p?.id===id?{...p,...upd}:p);
+  };
+
+  const addTask=(form)=>{
+    const t={...form,id:Date.now(),chatHistory:[]};
+    setTasks(ts=>[...ts,t]);
+    setSel(t);
+    setScreen("chat");
+  };
+
+  const selectTask=(task)=>{setSel(task);setScreen("chat");};
+
+  const startChat=async(task)=>{
+    if(!task||(task.chatHistory||[]).length>0)return;
+    setLoading(true);
+    const sys=`あなたはタスク解消の専門コンサルタントです。\nタスク:「${task.title}」\n詳細:${task.description||"なし"}\n優先度:${PRI_L[task.priority]} カテゴリ:${task.category}\nまず共感を示し、状況を深掘りする質問を1〜2個。150文字以内で。`;
+    try{
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:sys,messages:[{role:"user",content:"相談を始めます。"}]})});
+      const d=await r.json();
+      const rep=d.content?.map(b=>b.text||"").join("")||"こんにちは！";
+      updateTask(task.id,{chatHistory:[{role:"assistant",content:rep}]});
+    }catch{
+      updateTask(task.id,{chatHistory:[{role:"assistant",content:"こんにちは！このタスクについて一緒に考えましょう。何が一番難しいですか？"}]});
+    }
+    setLoading(false);
+  };
+
+  useEffect(()=>{if(sel&&(sel.chatHistory||[]).length===0)startChat(sel);},[sel?.id]);
+
+  const send=async()=>{
+    if(!input.trim()||!sel||loading)return;
+    const msg=input.trim();
+    setInput("");
+    if(taRef.current){taRef.current.style.height="auto";}
+    setLoading(true);
+    const hist=[...(sel.chatHistory||[]),{role:"user",content:msg}];
+    updateTask(sel.id,{chatHistory:hist});
+    const sys=`あなたはタスク解消の専門コンサルタントです。タスク:「${sel.title}」詳細:${sel.description||"なし"} 優先度:${PRI_L[sel.priority]} カテゴリ:${sel.category}\n具体的・実践的なアドバイスを200文字程度で。`;
+    try{
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:sys,messages:hist.map(m=>({role:m.role,content:m.content}))})});
+      const d=await r.json();
+      const rep=d.content?.map(b=>b.text||"").join("")||"エラーが発生しました";
+      updateTask(sel.id,{chatHistory:[...hist,{role:"assistant",content:rep}]});
+    }catch{
+      updateTask(sel.id,{chatHistory:[...hist,{role:"assistant",content:"通信エラーが発生しました。"}]});
+    }
+    setLoading(false);
+  };
+
+  const H=56;
+  const font="'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif";
+
+  // LIST SCREEN
+  if(screen==="list"){
+    return h("div",{style:{height:"100dvh",background:C.bg,display:"flex",flexDirection:"column",fontFamily:font,overflow:"hidden"}},
+      h("div",{style:{height:H,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",borderBottom:`1px solid ${C.border}`,flexShrink:0}},
+        h("h1",{style:{margin:0,fontSize:20,fontWeight:900,background:`linear-gradient(90deg,${C.accent},#a78bfa)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}},"TaskAI"),
+        h("button",{onClick:()=>setModal(true),style:{background:`linear-gradient(135deg,${C.accent},#a78bfa)`,border:"none",borderRadius:22,padding:"8px 20px",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer"}},"＋ 追加")
+      ),
+      h("div",{style:{flex:1,overflowY:"auto",padding:"16px 16px 32px",WebkitOverflowScrolling:"touch"}},
+        h("div",{style:{color:C.muted,fontSize:11,fontWeight:700,letterSpacing:2,marginBottom:14,textTransform:"uppercase"}},`タスク一覧 (${tasks.length})`),
+        tasks.length===0&&h("div",{style:{textAlign:"center",padding:"60px 0",color:C.muted}},
+          h("div",{style:{fontSize:44,marginBottom:12}},"✦"),
+          h("div",{style:{fontSize:15,fontWeight:600}},"タスクを追加して"),
+          h("div",{style:{fontSize:13}},"AIと一緒に解消しよう")
+        ),
+        ...tasks.map(t=>h(TaskCard,{key:t.id,task:t,onSelect:selectTask}))
+      ),
+      modal&&h(Modal,{onAdd:addTask,onClose:()=>setModal(false)})
+    );
+  }
+
+  // CHAT SCREEN
+  return h("div",{style:{height:"100dvh",background:C.bg,display:"flex",flexDirection:"column",fontFamily:font,overflow:"hidden"}},
+    h("div",{style:{height:H,display:"flex",alignItems:"center",gap:10,padding:"0 16px",borderBottom:`1px solid ${C.border}`,flexShrink:0,background:C.surface}},
+      h("button",{onClick:()=>setScreen("list"),style:{background:"none",border:"none",color:C.muted,fontSize:26,cursor:"pointer",padding:"4px 8px 4px 0",lineHeight:1,WebkitTapHighlightColor:"transparent"}},"‹"),
+      h("div",{style:{flex:1,minWidth:0}},
+        h("div",{style:{color:C.text,fontWeight:800,fontSize:15,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},sel?.title),
+        h("div",{style:{display:"flex",gap:6,marginTop:2}},
+          h(Tag,{label:PRI_L[sel?.priority],color:PRI_C[sel?.priority]}),
+          h(Tag,{label:sel?.category,color:CAT_C[sel?.category]||"#a78bfa"})
+        )
+      )
+    ),
+    h("div",{style:{flex:1,overflowY:"auto",padding:"16px 14px 8px",WebkitOverflowScrolling:"touch"}},
+      ...(sel?.chatHistory||[]).map((m,i)=>h(ChatBubble,{key:i,role:m.role,content:m.content})),
+      loading&&h("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:12}},
+        h("div",{style:{width:28,height:28,borderRadius:"50%",background:`linear-gradient(135deg,${C.accent},#a78bfa)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,flexShrink:0}},"✦"),
+        h("div",{style:{background:C.card,border:`1px solid ${C.border}`,borderRadius:"16px 16px 16px 4px",padding:"10px 14px"}},
+          h("span",{style:{color:C.muted,fontSize:18,letterSpacing:4}},"•••")
+        )
+      ),
+      h("div",{ref:endRef})
+    ),
+    h("div",{style:{padding:"10px 12px",paddingBottom:"calc(10px + env(safe-area-inset-bottom))",borderTop:`1px solid ${C.border}`,display:"flex",gap:8,background:C.surface,alignItems:"flex-end"}},
+      h("textarea",{ref:taRef,value:input,rows:1,placeholder:"メッセージを入力...",
+        onChange:e=>{setInput(e.target.value);e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,100)+"px";},
+        onKeyDown:e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();send();}},
+        style:{flex:1,background:C.card,border:`1px solid ${C.border}`,borderRadius:20,padding:"10px 14px",color:C.text,fontSize:15,outline:"none",resize:"none",fontFamily:font,lineHeight:1.5,overflow:"hidden",maxHeight:100}
+      }),
+      h("button",{onClick:send,disabled:!input.trim()||loading,style:{width:44,height:44,borderRadius:"50%",border:"none",background:input.trim()&&!loading?`linear-gradient(135deg,${C.accent},#a78bfa)`:C.border,color:"#fff",fontSize:18,cursor:input.trim()&&!loading?"pointer":"default",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}},"↑")
+    ),
+    modal&&h(Modal,{onAdd:addTask,onClose:()=>setModal(false)})
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+})();
+  </script>
+  <script>
+    if('serviceWorker' in navigator){
+      window.addEventListener('load',()=>{
+        navigator.serviceWorker.register('/todo/sw.js').catch(()=>{});
+      });
+    }
+  </script>
+</body>
+</html>
