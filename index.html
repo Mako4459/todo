@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0d0f14">
+    <meta name="description" content="TaskAI">
+    <title>TaskAI</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">TaskAI</p>
+          <h1>行動管理</h1>
+        </div>
+        <button class="icon-button" id="installButton" type="button" hidden aria-label="ホーム画面に追加">
+          <span aria-hidden="true">＋</span>
+        </button>
+      </header>
+
+      <main class="layout">
+        <section class="hero-panel" aria-label="進捗">
+          <div class="progress-ring" aria-hidden="true">
+            <span id="completionRate">0%</span>
+          </div>
+          <div class="hero-copy">
+            <h2>シンプルに整理</h2>
+            <p id="todaySummary">今日のタスクはありません。</p>
+          </div>
+        </section>
+
+        <section class="next-panel" aria-label="次の一手">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">NEXT ACTION</p>
+              <h2>次の一手</h2>
+            </div>
+            <button id="nextActionAskButton" class="template-button" type="button">GPT相談</button>
+          </div>
+          <p id="nextActionText" class="next-action-text">未完了タスクを追加すると、ここに次の一手が表示されます。</p>
+        </section>
+
+        <section class="view-switcher" aria-label="表示切替">
+          <button class="view-button active" data-view="list" type="button">一覧</button>
+          <button class="view-button" data-view="week" type="button">週間</button>
+          <button class="view-button" data-view="month" type="button">月間</button>
+        </section>
+
+        <section id="calendarView" class="calendar-view hidden" aria-label="カレンダー表示">
+          <div class="section-title">
+            <h2 id="calendarTitle">週間ビュー</h2>
+            <span id="calendarCount" class="count-pill">0</span>
+          </div>
+          <div id="calendarGrid" class="calendar-grid"></div>
+        </section>
+
+        <section class="task-section" aria-label="今日のタスク">
+          <div class="section-title">
+            <h2>今日のタスク</h2>
+            <span id="todayCount" class="count-pill">0</span>
+          </div>
+          <div id="todayTasks" class="task-list"></div>
+        </section>
+
+        <section class="task-section" aria-label="すべてのタスク">
+          <div class="section-title">
+            <h2>すべて</h2>
+            <span id="taskCount" class="count-pill">0</span>
+          </div>
+          <div id="taskList" class="task-list"></div>
+        </section>
+
+        <section class="toolbar" aria-label="検索と絞り込み">
+          <label class="search-field">
+            <span>検索</span>
+            <input id="searchInput" type="search" placeholder="タスク・メモを検索">
+          </label>
+          <div class="toolbar-row">
+            <select id="categoryFilter" aria-label="カテゴリフィルタ"></select>
+            <select id="sortSelect" aria-label="並び替え">
+              <option value="created-desc">新しい順</option>
+              <option value="due-asc">期限が近い順</option>
+              <option value="priority-desc">優先度順</option>
+              <option value="title-asc">名前順</option>
+            </select>
+          </div>
+        </section>
+
+        <details id="addTaskDetails" class="form-panel" aria-label="タスク追加">
+          <summary class="form-summary">
+            <span>＋ タスクを追加</span>
+            <small>必要なときだけ開く</small>
+          </summary>
+          <form id="taskForm" autocomplete="off">
+            <label>
+              <span>タスク</span>
+              <input id="taskTitle" name="title" type="text" placeholder="例: 民法の択一30問を解く" required>
+            </label>
+            <div class="form-grid">
+              <label>
+                <span>カテゴリ</span>
+                <div class="inline-field">
+                  <select id="taskCategory" name="category"></select>
+                  <button id="addCategoryButton" class="ghost-button" type="button">追加</button>
+                </div>
+              </label>
+              <label>
+                <span>期限</span>
+                <input id="taskDueDate" name="dueDate" type="date">
+              </label>
+              <label>
+                <span>優先度</span>
+                <select id="taskPriority" name="priority">
+                  <option value="high">高</option>
+                  <option value="medium" selected>中</option>
+                  <option value="low">低</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              <span>メモ</span>
+              <textarea id="taskMemo" name="memo" rows="3" placeholder="気づき、論点、GPTに聞きたいこと"></textarea>
+            </label>
+            <button class="primary-button wide" type="submit">タスクを追加</button>
+          </form>
+        </details>
+
+        <section class="quick-panel" aria-label="GPT壁打ち">
+          <div class="section-title">
+            <h2>GPT壁打ち</h2>
+            <button id="askChatGptButton" class="primary-button" type="button">ChatGPTに質問する</button>
+          </div>
+          <div class="template-grid" id="templateQuestions"></div>
+        </section>
+      </main>
+    </div>
+
+    <button id="addTaskFab" class="fab-button" type="button" aria-label="タスク追加フォームを開く">＋</button>
+
+    <template id="taskTemplate">
+      <article class="task-card">
+        <div class="task-main">
+          <button class="complete-button" type="button" aria-label="完了を切り替え"></button>
+          <div class="task-content">
+            <div class="task-heading">
+              <h3></h3>
+              <span class="priority-dot"></span>
+            </div>
+            <div class="task-meta"></div>
+            <textarea class="memo-input" rows="2" aria-label="メモ"></textarea>
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="template-button edit-button" type="button">編集</button>
+          <button class="template-button ask-button" type="button">GPT質問</button>
+          <button class="danger-button delete-button" type="button">削除</button>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
